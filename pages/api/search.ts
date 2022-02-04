@@ -67,7 +67,11 @@ export default async function handler(
       (pageNum + 1) * RESULTS_PER_PAGE
     );
 
-    res.status(200).json({ matches, hasMoreResults });
+    const msToWait = 500;
+    // introduce artificial delay to simulate slow server
+    setTimeout(() => {
+      res.status(200).json({ matches, hasMoreResults });
+    }, msToWait);
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }

@@ -136,6 +136,7 @@ const Home: NextPage = () => {
           />
 
           <div className={styles.delay}>
+            <label htmlFor="addDelay">Add server delay</label>
             <input
               type="checkbox"
               id="addDelay"
@@ -143,7 +144,6 @@ const Home: NextPage = () => {
               checked={addDelay}
               onChange={handleAddDelayChange}
             />
-            <label htmlFor="addDelay">Add server delay?</label>
           </div>
 
           {query && (

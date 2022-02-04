@@ -44,16 +44,28 @@ export default async function handler(
   res: NextApiResponse<Data>
 ) {
   try {
-    const { q: query } = req.query;
+    const { q: query, p: page } = req.query;
 
-    const page = 0;
+    const pageNum =
+      typeof page === 'string' && !Number.isNaN(parseInt(page))
+        ? parseInt(page)
+        : 0;
 
     if (typeof query !== 'string' || query.length === 0 || query.length > 5) {
       return res.status(400).send('Invalid search');
     }
 
-    const numMatches = (page + 1) * RESULTS_PER_PAGE;
-    const { matches, hasMoreResults } = findMatches(query, numMatches);
+    const numMatches = (pageNum + 1) * RESULTS_PER_PAGE;
+    const { matches: allMatches, hasMoreResults } = findMatches(
+      query,
+      numMatches
+    );
+
+    // we fetch all matches from index 0 to whichever we need, so adjust to match only the requested page
+    const matches = allMatches.slice(
+      pageNum * RESULTS_PER_PAGE,
+      (pageNum + 1) * RESULTS_PER_PAGE
+    );
 
     res.status(200).json({ matches, hasMoreResults });
   } catch (e) {

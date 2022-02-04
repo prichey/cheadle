@@ -8,7 +8,7 @@ import {
 } from 'react';
 import type { NextPage } from 'next';
 import Image from 'next/image';
-import useSWR from 'swr';
+import useSWRInfinite, { SWRInfiniteKeyLoader } from 'swr/infinite';
 
 import styles from '../styles/Home.module.css';
 
@@ -22,19 +22,17 @@ interface Data {
 interface ResultsProps {
   data?: Data;
   onLoadMore: () => void;
+  hasWaited: boolean;
 }
 
-const Results: FC<ResultsProps> = ({ data, onLoadMore }) => {
+const Results: FC<ResultsProps> = ({ data, onLoadMore, hasWaited }) => {
   if (!data) {
-    // TODO: render 'loading...' if taking too long
-    return null;
+    return hasWaited ? <p>loading...</p> : null;
   }
 
   const { matches = [], hasMoreResults } = data;
 
-  console.log({ hasMoreResults });
-
-  if (matches.length === 0) {
+  if (hasWaited && matches.length === 0) {
     return <p>no matches found :(</p>;
   }
 
@@ -54,19 +52,51 @@ const Results: FC<ResultsProps> = ({ data, onLoadMore }) => {
 
 const Home: NextPage = () => {
   const [query, setQuery] = useState('');
+  const [hasWaited, setHasWaited] = useState(false); // convenience to prevent flashes of content
 
-  const { data } = useSWR<Data>(
-    query ? `/api/search?q=${query}` : null,
-    fetcher
+  useEffect(() => {
+    const msToWait = 150;
+    setHasWaited(false);
+    const timeout = setTimeout(() => setHasWaited(true), msToWait);
+
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  const getKey: SWRInfiniteKeyLoader = useMemo(
+    () => (pageIndex) => {
+      if (!query) {
+        return null; // no query, no need to fetch
+      }
+
+      return `/api/search?q=${query}&p=${pageIndex}`;
+    },
+    [query]
   );
 
-  const matches: string[] = useMemo(() => {
-    if (!data || !query) {
-      return [];
+  const {
+    data: dataPages,
+    size,
+    setSize,
+  } = useSWRInfinite<Data>(getKey, fetcher);
+
+  const data: Data = useMemo(() => {
+    if (!dataPages || dataPages.length === 0) {
+      return {
+        matches: [],
+        hasMoreResults: false,
+      };
     }
 
-    return data.matches ?? [];
-  }, [data, query]);
+    const matches = dataPages.reduce(
+      (acc, page) => [...acc, ...page.matches],
+      [] as string[]
+    );
+
+    return {
+      matches,
+      hasMoreResults: dataPages[dataPages.length - 1].hasMoreResults ?? false,
+    };
+  }, [dataPages]);
 
   const handleInputChange: ChangeEventHandler<HTMLInputElement> = useCallback(
     (e) => {
@@ -82,12 +112,8 @@ const Home: NextPage = () => {
   );
 
   const handleLoadMoreClick = useCallback(() => {
-    console.log('load more');
-  }, []);
-
-  useEffect(() => {
-    console.log({ query, matches });
-  }, [query, matches]);
+    setSize(size + 1);
+  }, [setSize, size]);
 
   return (
     <div className={styles.container}>
@@ -102,7 +128,13 @@ const Home: NextPage = () => {
             onChange={handleInputChange}
           />
 
-          {query && <Results data={data} onLoadMore={handleLoadMoreClick} />}
+          {query && (
+            <Results
+              data={data}
+              onLoadMore={handleLoadMoreClick}
+              hasWaited={hasWaited}
+            />
+          )}
         </div>
         <div className={styles['cheadle-wrap']}>
           <Image

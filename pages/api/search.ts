@@ -44,7 +44,7 @@ export default async function handler(
   res: NextApiResponse<Data>
 ) {
   try {
-    const { q: query, p: page } = req.query;
+    const { q: query, p: page, slow = 'false' } = req.query;
 
     const pageNum =
       typeof page === 'string' && !Number.isNaN(parseInt(page))
@@ -67,11 +67,16 @@ export default async function handler(
       (pageNum + 1) * RESULTS_PER_PAGE
     );
 
-    const msToWait = 500;
-    // introduce artificial delay to simulate slow server
-    setTimeout(() => {
-      res.status(200).json({ matches, hasMoreResults });
-    }, msToWait);
+    const respond = () => res.status(200).json({ matches, hasMoreResults });
+
+    if (slow === 'true') {
+      // introduce artificial delay to simulate slow server
+      const msToWait = 1000;
+      setTimeout(respond, msToWait);
+      return;
+    }
+
+    respond();
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }

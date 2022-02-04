@@ -55,6 +55,7 @@ const Results: FC<ResultsProps> = ({ data, onLoadMore, hasWaited = true }) => {
 };
 
 const Home: NextPage = () => {
+  const [addDelay, setAddDelay] = useState(false);
   const [query, setQuery] = useState('');
   const [hasWaited, setHasWaited] = useState(false); // convenience to prevent flashes of content
 
@@ -72,9 +73,9 @@ const Home: NextPage = () => {
         return null; // no query, no need to fetch
       }
 
-      return `/api/search?q=${query}&p=${pageIndex}`;
+      return `/api/search?q=${query}&p=${pageIndex}&slow=${addDelay}`;
     },
-    [query]
+    [query, addDelay]
   );
 
   const {
@@ -83,12 +84,9 @@ const Home: NextPage = () => {
     setSize,
   } = useSWRInfinite<Data>(getKey, fetcher);
 
-  const data: Data = useMemo(() => {
+  const data: Data | undefined = useMemo(() => {
     if (!dataPages || dataPages.length === 0) {
-      return {
-        matches: [],
-        hasMoreResults: false,
-      };
+      return undefined;
     }
 
     const matches = dataPages.reduce(
@@ -115,6 +113,11 @@ const Home: NextPage = () => {
     [query]
   );
 
+  const handleAddDelayChange: ChangeEventHandler<HTMLInputElement> =
+    useCallback((e) => {
+      setAddDelay(e.target.checked);
+    }, []);
+
   const handleLoadMoreClick = useCallback(() => {
     setSize(size + 1);
   }, [setSize, size]);
@@ -131,6 +134,17 @@ const Home: NextPage = () => {
             maxLength={5}
             onChange={handleInputChange}
           />
+
+          <div className={styles.delay}>
+            <input
+              type="checkbox"
+              id="addDelay"
+              name="addDelay"
+              checked={addDelay}
+              onChange={handleAddDelayChange}
+            />
+            <label htmlFor="addDelay">Add server delay?</label>
+          </div>
 
           {query && (
             <div className={styles['results-wrap']}>

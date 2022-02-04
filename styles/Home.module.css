@@ -19,10 +19,14 @@
 .search {
   flex-grow: 1;
   padding: 2rem 0;
+  text-align: center;
+}
+
+.delay {
+  margin-top: 1rem;
 }
 
 .results-wrap {
-  text-align: center;
   font-size: 1.5rem;
 }
 

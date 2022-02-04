@@ -21,11 +21,11 @@ interface Data {
 
 interface ResultsProps {
   data?: Data;
-  onLoadMore: () => void;
-  hasWaited: boolean;
+  onLoadMore?: () => void;
+  hasWaited?: boolean;
 }
 
-const Results: FC<ResultsProps> = ({ data, onLoadMore, hasWaited }) => {
+const Results: FC<ResultsProps> = ({ data, onLoadMore, hasWaited = true }) => {
   if (!data) {
     return hasWaited ? <p>loading...</p> : null;
   }
@@ -38,13 +38,17 @@ const Results: FC<ResultsProps> = ({ data, onLoadMore, hasWaited }) => {
 
   return (
     <>
-      <ul>
+      <ul className={styles.results}>
         {matches.map((match) => (
-          <li key={match}>{match}</li>
+          <li key={match} className={styles.result}>
+            {match}
+          </li>
         ))}
       </ul>
-      {hasMoreResults && (
-        <button onClick={onLoadMore}>Load more results</button>
+      {onLoadMore && hasMoreResults && (
+        <button onClick={onLoadMore} className={styles['load-more']}>
+          Load more results
+        </button>
       )}
     </>
   );
@@ -129,11 +133,13 @@ const Home: NextPage = () => {
           />
 
           {query && (
-            <Results
-              data={data}
-              onLoadMore={handleLoadMoreClick}
-              hasWaited={hasWaited}
-            />
+            <div className={styles['results-wrap']}>
+              <Results
+                data={data}
+                onLoadMore={handleLoadMoreClick}
+                hasWaited={hasWaited}
+              />
+            </div>
           )}
         </div>
         <div className={styles['cheadle-wrap']}>

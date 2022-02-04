@@ -26,7 +26,28 @@
 }
 
 .results-wrap {
-  background: pink;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.load-more {
+  font-size: 1.5rem;
+  padding: 1rem;
+  border: 0;
+  background-color: rgb(83, 141, 78);
+  color: white;
+  cursor: pointer;
+}
+
+.results {
+  list-style: none;
+  padding: 0;
+}
+
+.result {
+  text-transform: uppercase;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .cheadle-wrap {
@@ -37,6 +58,7 @@
   font-size: 3rem;
   padding: 0.25rem;
   text-align: center;
+  max-width: 25rem;
 }
 
 /* .footer {
